@@ -1,0 +1,47 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"cmake.configureEnvironment": {
+			"PICO_SDK_PATH": "../pico-sdk"
+		},
+		"files.associations": {
+			"stdlib.h": "c"
+		},
+		"cmake.debugConfig": {
+		
+		},
+		"cmake.defaultVariants": {
+			"buildType": {
+				"default": "debug",
+				"description": "The build type.",
+				"choices": {
+					"debug": {
+						"short": "Debug",
+						"long": "Disable optimizations - include debug information.",
+						"buildType": "Debug"
+					},
+					"release": {
+						"short": "Release",
+						"long": "Optimize for speed - exclude debug information.",
+						"buildType": "Release"
+					},
+					"minsize": {
+						"short": "MinSizeRel",
+						"long": "Optimize for smallest binary size - exclude debug information.",
+						"buildType": "MinSizeRel"
+					},
+					"reldeb": {
+						"short": "RelWithDebInfo",
+						"long": "Optimize for speed - include debug information.",
+						"buildType": "RelWithDebInfo"
+					}
+				}
+			}
+		},
+		"cortex-debug.variableUseNaturalFormat": false
+	}
+}
