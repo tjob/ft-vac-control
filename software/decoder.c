@@ -5,9 +5,9 @@
 /**
  * @brief Decode Manchester pairs.  10 = 0 and 01 = 1
  * 
- * @param upper The upper chip
- * @param lower The lower chip
- * @return int 1 if bit is true, 0 for false and -1 for an invalid chip pair
+ * @param upper The upper chirp
+ * @param lower The lower chirp
+ * @return int 1 if bit is true, 0 for false and -1 for an invalid chirp pair
  */
 int manPairToBit(bool upper, bool lower)
 {
@@ -64,10 +64,9 @@ void setState(struct decoder *dec, uint newState)
  */
 bool on_16x_timer(struct repeating_timer *t)
 {
-    const bool current = gpio_get(26);
-    bool edgeDetected = false;
-
     struct decoder *dec = (struct decoder*)t->user_data;
+    const bool current = gpio_get(dec->inputPin);
+    bool edgeDetected = false;
 
     // Has there been an edge since the last tick?
     if (dec->last != current) {
@@ -96,9 +95,9 @@ bool on_16x_timer(struct repeating_timer *t)
 
         case MAB:
             if (dec->tickCountInState == TICKS_PER_3QBITS) {
-                // Read the first half (upper chip) of the start bit
+                // Read the first half (upper chirp) of the start bit
                 // and save it for the next half
-                dec->upperChip = current;
+                dec->upperChirp = current;
             }
 
             if (edgeDetected) {
@@ -108,20 +107,20 @@ bool on_16x_timer(struct repeating_timer *t)
 
         case STARTBIT:
             if (dec->ticksSinceEdge == TICKS_PER_QBIT) {
-                // This is where we would sample second half (lower chip) of start bit, it will be zero no need to decode it.
+                // This is where we would sample second half (lower chirp) of start bit, it will be zero no need to decode it.
                 
                 // Setup for reading the message 
                 clearBits(dec);
 
-                // Now wait to read the first half bit (chip) of the message.
-                setState(dec, UPPERCHIP);
+                // Now wait to read the first half bit (chirp) of the message.
+                setState(dec, UPPERCHIRP);
             } 
             break;
 
-        case LOWERCHIP:
+        case LOWERCHIRP:
             if (dec->ticksSinceEdge == TICKS_PER_QBIT || dec->ticksSinceEdge == TICKS_PER_3QBITS) {
-                // Can now sample the second chip to get a full bit.
-                int FullBit = manPairToBit(dec->upperChip, current);
+                // Can now sample the second chirp to get a full bit.
+                int FullBit = manPairToBit(dec->upperChirp, current);
 
                 if (FullBit == -1) {
                     // Invalid half bit pair
@@ -133,7 +132,7 @@ bool on_16x_timer(struct repeating_timer *t)
                     dec->message |= dec->rxMask & FullBit;
                     dec->rxMask <<= 1;
 
-                    setState(dec, UPPERCHIP);
+                    setState(dec, UPPERCHIRP);
                 }
             }
 
@@ -143,11 +142,11 @@ bool on_16x_timer(struct repeating_timer *t)
             }     
             break;
 
-        case UPPERCHIP:
+        case UPPERCHIRP:
             if (dec->ticksSinceEdge == TICKS_PER_QBIT || dec->ticksSinceEdge == TICKS_PER_3QBITS) {
-                // Sample the first, upper, chip and save it for the next half
-                dec->upperChip = current;
-                setState(dec, LOWERCHIP);
+                // Sample the first, upper, chirp and save it for the next half
+                dec->upperChirp = current;
+                setState(dec, LOWERCHIRP);
             }
 
             if (dec->ticksSinceEdge == TICKS_PER_5QBITS) {
@@ -193,9 +192,11 @@ uint stopDecoder(struct decoder *dec)
  * @brief Initialize the decoder
  * 
  * @param dec Pointer to a decoder structure to be initilized
+ * @param GPIO_Pin The pin do read the input from
  */
-void initDecoder(struct decoder *dec)
+void initDecoder(struct decoder *dec, uint GPIO_Pin)
 {
+    dec->inputPin = GPIO_Pin;
     clearBits(dec);
     queue_init(&dec->messageFIFO, sizeof(uint32_t), 16);
 }

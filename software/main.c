@@ -5,11 +5,12 @@
 int main() {
     stdio_init_all();
 
+    // Onboard LED on the Pi Pico 
     const uint LED_PIN = PICO_DEFAULT_LED_PIN;
     gpio_init(LED_PIN);
     gpio_set_dir(LED_PIN, GPIO_OUT);
 
-    // Setup the input pin to read the linecode from the bluetooth adaptor
+    // Setup the input pin to read the linecode from the bluetooth adaptor.
     const uint FTBT_PIN = 26;
     gpio_init(FTBT_PIN);
     gpio_set_dir(FTBT_PIN, GPIO_IN);
@@ -23,7 +24,7 @@ int main() {
     // One and only decoder
     struct decoder decoder = {0};
 
-    initDecoder(&decoder);
+    initDecoder(&decoder, FTBT_PIN);
     startDecoder(&decoder);
 
     while (true) {
@@ -45,7 +46,7 @@ int main() {
             }
 
             if (message == 0xac17) {
-                // Off Command seen
+                // Off command seen
                 gpio_put(SSR_PIN, 0);
             }
         }
