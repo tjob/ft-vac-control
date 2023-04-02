@@ -39,6 +39,7 @@ struct decoder {
     bool upperChirp; ///< First half of a bit (a chirp) received
     uint32_t rxMask;
     queue_t messageFIFO;
+    uint32_t decodeErrors;
 };
 
 void initDecoder(struct decoder *dec, uint GPIO_Pin);

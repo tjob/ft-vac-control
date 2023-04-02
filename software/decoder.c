@@ -128,8 +128,8 @@ bool on_16x_timer(struct repeating_timer *t)
                 } else {
                     dec->bitsRecieved++;
 
-                    // Add the bit to the message in the correct place pointed to by the rxMask.
-                    dec->message |= dec->rxMask & FullBit;
+                    // Add the bit to the message in the correct place pointed to by the rxMask.                    
+                    dec->message |= FullBit ? dec->rxMask : 0;
                     dec->rxMask <<= 1;
 
                     setState(dec, UPPERCHIRP);
@@ -164,6 +164,7 @@ bool on_16x_timer(struct repeating_timer *t)
 
         case ERROR:
         default:
+            dec->decodeErrors++;
             clearBits(dec);
             setState(dec, IDLE);
             break;

@@ -1,12 +1,16 @@
 #include "pico/stdlib.h"
 #include <stdio.h>
+#include <time.h>
 #include "decoder.h"
+
+#define AUTO_OFF_AFTER 60*60*1000 // For safety, automaticaly turn of the vacuum if left on for more than 1 Hour.
 
 int main() {
     stdio_init_all();
 
     // Onboard LED on the Pi Pico 
     const uint LED_PIN = PICO_DEFAULT_LED_PIN;
+    const uint LED_PIN_MAKS = 1 << LED_PIN;
     gpio_init(LED_PIN);
     gpio_set_dir(LED_PIN, GPIO_OUT);
 
@@ -27,10 +31,10 @@ int main() {
     initDecoder(&decoder, FTBT_PIN);
     startDecoder(&decoder);
 
+    absolute_time_t AutoOffTime = 0;
+
     while (true) {
-        gpio_put(LED_PIN, 1);
-        sleep_ms(150);
-        gpio_put(LED_PIN, 0);
+        gpio_xor_mask(LED_PIN_MAKS);
         sleep_ms(150);
 
         uint32_t message;
@@ -43,6 +47,10 @@ int main() {
             if (message == 0x0117) {
                 // On command seen
                 gpio_put(SSR_PIN, 1);
+
+#ifdef AUTO_OFF_AFTER
+                AutoOffTime = make_timeout_time_ms(AUTO_OFF_AFTER);
+#endif
             }
 
             if (message == 0xac17) {
@@ -50,6 +58,14 @@ int main() {
                 gpio_put(SSR_PIN, 0);
             }
         }
+
+#ifdef AUTO_OFF_AFTER
+        // Safety feature: Auto turn off the vacumme after 
+        if (time_reached(AutoOffTime)) {
+            gpio_put(SSR_PIN, 0);
+        }
+#endif
+
     }
 
 }
