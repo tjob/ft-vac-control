@@ -58,7 +58,7 @@ void clearBits(struct decoder *dec)
 /**
  * @brief Added a complete message to the fifo for consumption in the main loop.
  * 
- * @param dec Pointer to a decoder structure
+ * @param dec Pointer to a decoder structure.
  */
 void ProcessBits(struct decoder *dec)
 {
@@ -69,20 +69,20 @@ void ProcessBits(struct decoder *dec)
 /**
  * @brief Set the State decoder
  * 
- * @param dec 
- * @param newState 
+ * @param dec Pointer to a decoder structure.
+ * @param newState The new state the decoder is transitioning too.
  */
 void setState(struct decoder *dec, uint newState)
 {
     dec->state = newState;
-    dec->tickCountInState = 0;  // count since last state change
+    dec->tickCountInState = 0;  // Count since last state change.
 }
 
 /**
  * @brief Runs on a timer at 16x the speed of bit (1 ms), so every 62.5 us (i.e. at 16 kHz)
  * 
- * @param t Pointer to a repeating timer structure
- * @return Always returns true so the timer continues to tick 
+ * @param t Pointer to a repeating timer structure.
+ * @return Always returns true so the timer continues to tick. 
  * 
  * This is the main decoding state machine.
  */
