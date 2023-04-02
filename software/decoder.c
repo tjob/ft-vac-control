@@ -5,8 +5,8 @@
 /**
  * @brief Decode Manchester pairs.  10 = 0 and 01 = 1
  * 
- * @param upper The upper chirp
- * @param lower The lower chirp
+ * @param upper The upper, first, chirp
+ * @param lower The lower, seccond, chirp
  * @return int 1 if bit is true, 0 for false and -1 for an invalid chirp pair
  */
 int manPairToBit(bool upper, bool lower)
@@ -55,14 +55,13 @@ void setState(struct decoder *dec, uint newState)
     dec->tickCountInState = 0;  // count since last state change
 }
 
-
 /**
  * @brief Runs on a timer at 16x the speed of bit (1 ms), so every 62.5 us (i.e. at 16 kHz)
  * 
  * @param t Pointer to a repeating timer structure
  * @return Alwasy returns true so the timer continues to tick 
  */
-bool on_16x_timer(struct repeating_timer *t)
+bool __not_in_flash_func(on_16x_timer)(struct repeating_timer *t)
 {
     struct decoder *dec = (struct decoder*)t->user_data;
     const bool current = gpio_get(dec->inputPin);
@@ -172,28 +171,39 @@ bool on_16x_timer(struct repeating_timer *t)
 
     dec->tickCountInState++;
     dec->ticksSinceEdge++;
+    dec->totalTicks++;
 
     return true; // keep repeating
 }
 
-uint startDecoder(struct decoder *dec)
+/**
+ * @brief Start the decoder timer ticking, on_16x_timer() will be called pariodicaly.
+ * 
+ * @param dec Pointer to the decoder to start.
+ * @return true if the timer could be created.
+ */
+bool startDecoder(struct decoder *dec)
 {
-    // Setup timer
-    add_repeating_timer_us(-62, on_16x_timer, dec, &(dec->timer));
-    return 0;
-}
-
-uint stopDecoder(struct decoder *dec)
-{
-    cancel_repeating_timer(&(dec->timer));
-    return 0;
+    // Setup timer.  Negative delay_us to pariod undepentent of the tick duration.
+    return add_repeating_timer_us(-1000000/TICKS_PER_SEC, on_16x_timer, dec, &(dec->timer));
 }
 
 /**
- * @brief Initialize the decoder
+ * @brief Stop the decoder timer from ticking. When stopped no new messages will be received.
  * 
- * @param dec Pointer to a decoder structure to be initilized
- * @param GPIO_Pin The pin do read the input from
+ * @param dec Pointer to the decoder to stop.
+ * @return true if the decoder timer was stopped.
+ */
+bool stopDecoder(struct decoder *dec)
+{
+    return cancel_repeating_timer(&(dec->timer));
+}
+
+/**
+ * @brief Initialize the decoder.
+ * 
+ * @param dec Pointer to a decoder structure to be initilized.
+ * @param GPIO_Pin The pin do read the input from.
  */
 void initDecoder(struct decoder *dec, uint GPIO_Pin)
 {
