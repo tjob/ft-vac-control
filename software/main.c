@@ -1,3 +1,13 @@
+/**
+ * @file main.c
+ * @author tjob
+ * @brief Use a Raspberry Pi Pico and a Festool 202097 CT-FI/M-Set to control any vacuum
+ * @version 0.1
+ * @date 2023-04-02
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
 #include "pico/stdlib.h"
 #include "hardware/watchdog.h"
 #include <stdio.h>
@@ -5,15 +15,15 @@
 #include "decoder.h"
 
 int main() {
-    const uint32_t AUTO_OFF_AFTER = 60*60*1000; ///!< Automaticaly turn off the vacuum if left on for more than 1 Hour.
+    const uint32_t AUTO_OFF_AFTER = 60*60*1000; ///< Automatically turn off the vacuum if left on for more than 1 Hour.
     const uint LED_PIN_MAKS = 1 << PICO_DEFAULT_LED_PIN;
-    const uint FTBT_PIN = 26;
-    const uint SSR_PIN = 4;
+    const uint FTBT_PIN = 26;   ///< GPIO pin connected to the Festool CT-FI/M Bluetooth receiver module. 
+    const uint SSR_PIN = 4;     ///< GPIO pin connected to the Solid State Relay
 
-    struct decoder decoder = {0}; ///!< The one and only decoder
-    absolute_time_t AutoOffTime = {0};
-    uint32_t ticksObserved = 0;
-    uint32_t message = 0;
+    struct decoder decoder = {0}; ///< The one and only decoder
+    absolute_time_t AutoOffTime = {0}; ///< Used to track the absolute time we should automatically turn off if left on.
+    uint32_t ticksObserved = 0; ///< Used to check that decoder is still ticking for the hardware watchdog.
+    uint32_t message = 0; ///< Holds messages de-queued from the decoder's FIFO. 
 
     stdio_init_all();
 
@@ -25,11 +35,11 @@ int main() {
     gpio_init(PICO_DEFAULT_LED_PIN);
     gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
 
-    // Setup the input pin to read the linecode from the bluetooth adaptor.
+    // Setup the input pin to read the line-code from the bluetooth adaptor.
     gpio_init(FTBT_PIN);
     gpio_set_dir(FTBT_PIN, GPIO_IN);
 
-    // Setup the output pin to drive the Solid State Relay controling the power to the vacuum. 
+    // Setup the output pin to drive the Solid State Relay controlling the power to the vacuum. 
     gpio_init(SSR_PIN);
     gpio_set_dir(SSR_PIN, GPIO_OUT);
     gpio_put(SSR_PIN, 0);
@@ -64,7 +74,7 @@ int main() {
                 // Turn on the SSR
                 gpio_put(SSR_PIN, 1);
 
-                // Safety feature: Calculate the time we should turn off automaticaly if we need to.
+                // Safety feature: Calculate the time we should turn off automatically if we need to.
                 AutoOffTime = make_timeout_time_ms(AUTO_OFF_AFTER);
             }
 
@@ -77,7 +87,7 @@ int main() {
             // All other commands are ignored for now.
         }
 
-        // Safety feature: Auto turn off the vacumme if it's been on too long. 
+        // Safety feature: Auto turn off the vacuum if it's been on too long. 
         if (AUTO_OFF_AFTER && time_reached(AutoOffTime)) {
             gpio_put(SSR_PIN, 0);
         }

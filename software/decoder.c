@@ -1,3 +1,26 @@
+/**
+ * @file decoder.c
+ * @author tjob
+ * @brief Decoder for Festool 202097 CT-FI/M-Set
+ * @version 0.1
+ * @date 2023-04-02
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ * The Festool Bluetooth add-on for CT26/36/48 vacuum extractors talks connects communicates 
+ * using a serial line code, running at approximately 1 kHz.  The Bluetooth receiver encodes bits
+ * onto the line using a form of Manchester encoding. Line transition from 1 to 0 represent a 
+ * 1, and transitions from 0 to 1 represent a 0. Messages start with a break, holding the line
+ * low for approximately 2 bit periods (2 ms), followed by a Mark of 1 ms.  There is a start bit, 
+ * always 0, and then 1-3 8bit bytes of data.
+ * 
+ * This decoder receives and decodes the incoming serial stream into messages that can be 
+ * consumed.
+ * 
+ * Note: This is all guess work, based on observations of one receiver and one manual button.
+ * it is suspected that the serial interface is bi-directional but this implementation is 
+ * receive only.
+ */
 #include "pico/stdlib.h"
 #include "decoder.h"
 
@@ -6,7 +29,7 @@
  * @brief Decode Manchester pairs.  10 = 0 and 01 = 1
  * 
  * @param upper The upper, first, chirp
- * @param lower The lower, seccond, chirp
+ * @param lower The lower, second, chirp
  * @return int 1 if bit is true, 0 for false and -1 for an invalid chirp pair
  */
 int manPairToBit(bool upper, bool lower)
@@ -59,7 +82,9 @@ void setState(struct decoder *dec, uint newState)
  * @brief Runs on a timer at 16x the speed of bit (1 ms), so every 62.5 us (i.e. at 16 kHz)
  * 
  * @param t Pointer to a repeating timer structure
- * @return Alwasy returns true so the timer continues to tick 
+ * @return Always returns true so the timer continues to tick 
+ * 
+ * This is the main decoding state machine.
  */
 bool __not_in_flash_func(on_16x_timer)(struct repeating_timer *t)
 {
@@ -136,7 +161,7 @@ bool __not_in_flash_func(on_16x_timer)(struct repeating_timer *t)
             }
 
             if (dec->ticksSinceEdge == TICKS_PER_5QBITS) {
-                // Something has gone wrong, should have had and edge by now, probaby end of packet.
+                // Something has gone wrong, should have had and edge by now, probably end of packet.
                 setState(dec, WAITIDLE);
             }     
             break;
@@ -149,7 +174,7 @@ bool __not_in_flash_func(on_16x_timer)(struct repeating_timer *t)
             }
 
             if (dec->ticksSinceEdge == TICKS_PER_5QBITS) {
-                // Something has gone wrong, should have had and edge by now, probaby end of packet.
+                // Something has gone wrong, should have had and edge by now, probably end of packet.
                 setState(dec, WAITIDLE);
             }            
             break;
@@ -177,14 +202,14 @@ bool __not_in_flash_func(on_16x_timer)(struct repeating_timer *t)
 }
 
 /**
- * @brief Start the decoder timer ticking, on_16x_timer() will be called pariodicaly.
+ * @brief Start the decoder timer ticking, on_16x_timer() will be called periodically.
  * 
  * @param dec Pointer to the decoder to start.
  * @return true if the timer could be created.
  */
 bool startDecoder(struct decoder *dec)
 {
-    // Setup timer.  Negative delay_us to pariod undepentent of the tick duration.
+    // Setup timer.  Negative delay_us to period independent of the tick duration.
     return add_repeating_timer_us(-1000000/TICKS_PER_SEC, on_16x_timer, dec, &(dec->timer));
 }
 
@@ -202,7 +227,7 @@ bool stopDecoder(struct decoder *dec)
 /**
  * @brief Initialize the decoder.
  * 
- * @param dec Pointer to a decoder structure to be initilized.
+ * @param dec Pointer to a decoder structure to be initialized.
  * @param GPIO_Pin The pin do read the input from.
  */
 void initDecoder(struct decoder *dec, uint GPIO_Pin)
