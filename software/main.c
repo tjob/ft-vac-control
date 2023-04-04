@@ -72,8 +72,7 @@ int main() {
         }
 
         // Consume all messages from the decoder waiting in the fifo.
-        while (queue_try_remove(&decoder.messageFIFO, &message))
-        {
+        while (queue_try_remove(&decoder.messageFIFO, &message)) {
             // Print the message
             printf("0x%08lx\n", message);
 
