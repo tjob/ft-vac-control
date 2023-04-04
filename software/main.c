@@ -45,7 +45,7 @@ int main() {
     // Setup the output pin to drive the Solid State Relay controlling the power to the vacuum. 
     gpio_init(SSR_PIN);
     gpio_set_dir(SSR_PIN, GPIO_OUT);
-    gpio_put(SSR_PIN, 0);   // Default relay output to off at startup.
+    gpio_put(SSR_PIN, false);   // Default relay output to off at startup.
 
     // Setup the decoder
     initDecoder(&decoder, FTBT_PIN);
@@ -75,12 +75,12 @@ int main() {
         while (queue_try_remove(&decoder.messageFIFO, &message))
         {
             // Print the message
-            printf("%08x\n", message);
+            printf("0x%08lx\n", message);
 
             // Is it a start command?
             if (message == (CMD_POWER | CMD_ON)) {
                 // Turn on the output relay
-                gpio_put(SSR_PIN, 1);
+                gpio_put(SSR_PIN, true);
 
                 // Safety feature: Calculate the time we should turn off automatically if we need to.
                 AutoOffTime = make_timeout_time_ms(AUTO_OFF_AFTER);
@@ -89,7 +89,7 @@ int main() {
             // Is it a stop command?
             if (message == (CMD_POWER | CMD_OFF)) {
                 // Turn off the output relay
-                gpio_put(SSR_PIN, 0);
+                gpio_put(SSR_PIN, false);
             }
 
             // All other commands are ignored for now.
@@ -101,4 +101,8 @@ int main() {
         }
     }
 
+    // Should never get here! Halt.
+    stopDecoder(&decoder);
+    while (true) {}
+    return 0;
 }

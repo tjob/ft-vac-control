@@ -15,9 +15,15 @@
  * transitions from low to high represent a 0. The line idles high when nothing 
  * is being sent. Messages start with a "break", pulling the line low for 
  * approximately 2 bit periods (2 ms), followed by a "mark" of 1 ms.  There is 
- * a start bit, always 0, followed by several bytes of data.
+ * a start bit, always 0, followed by several bytes of data. Bytes are sent 
+ * least significant bit first.
  * 
- * This decoder receives and decodes the incoming serial stream into messages.
+ * This decoder receives and decodes the incoming serial stream into messages
+ * up to 32bits in length (4 bytes). We define a message to be the bit sequence
+ * after the start bit until the line goes idle again. All messages seen so far
+ * are an integer number of bytes long. A single press of the manual remote 
+ * button results in multiple messages being sent, with a relatively long delay 
+ * (100's of ms) between then.
  * 
  * Note: While this decoder works, it's based on observations of one receiver 
  * and one manual remote button. It has not been tested with any of the Festool 
@@ -25,7 +31,7 @@
  * is bi-directional, allowing the vacuum extractor to respond to the commands. 
  * This implementation is receive only.
  * 
- * Theory of operation.
+ * Theory of operation:
  * on_16x_timer() runs, ticks from a hardware timer, at approximately 16 times 
  * bit rate. Based on the current state, how long we have been in that state, and
  * how long it's been since the last edge was seen we can decode the signal.
