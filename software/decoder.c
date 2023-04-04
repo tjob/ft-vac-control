@@ -7,26 +7,42 @@
  * 
  * @copyright Copyright (c) 2023
  * 
- * The Festool Bluetooth add-on for CT26/36/48 vacuum extractors talks connects communicates 
- * using a serial line code, running at approximately 1 kHz.  The Bluetooth receiver encodes bits
- * onto the line using a form of Manchester encoding. Line transition from 1 to 0 represent a 
- * 1, and transitions from 0 to 1 represent a 0. Messages start with a break, holding the line
- * low for approximately 2 bit periods (2 ms), followed by a Mark of 1 ms.  There is a start bit, 
- * always 0, and then 1-3 8bit bytes of data.
+ * The Festool 202097 CT-F I Bluetooth add-on for CT26/36/48 vacuum extractors 
+ * has 3 electrical connections to the host vacuum; GND, +5V, and Data. The 
+ * data line is used for serial communication and runs at approximately 1 kHz. 
+ * The Bluetooth receiver encodes bits onto the data line using a form of 
+ * Manchester encoding. Line transitions from high to low represent a 1, and 
+ * transitions from low to high represent a 0. The line idles high when nothing 
+ * is being sent. Messages start with a "break", pulling the line low for 
+ * approximately 2 bit periods (2 ms), followed by a "mark" of 1 ms.  There is 
+ * a start bit, always 0, followed by several bytes of data.
  * 
- * This decoder receives and decodes the incoming serial stream into messages that can be 
- * consumed.
+ * This decoder receives and decodes the incoming serial stream into messages.
  * 
- * Note: This is all guess work, based on observations of one receiver and one manual button.
- * it is suspected that the serial interface is bi-directional but this implementation is 
- * receive only.
+ * Note: While this decoder works, it's based on observations of one receiver 
+ * and one manual remote button. It has not been tested with any of the Festool 
+ * cordless Bluetooth battery tools. It is suspected that the serial interface 
+ * is bi-directional, allowing the vacuum extractor to respond to the commands. 
+ * This implementation is receive only.
+ * 
+ * Theory of operation.
+ * on_16x_timer() runs, ticks from a hardware timer, at approximately 16 times 
+ * bit rate. Based on the current state, how long we have been in that state, and
+ * how long it's been since the last edge was seen we can decode the signal.
+ * The timer is free running but the state machine within synchronizes to the
+ * edges seen on the serial input. This takes care of any drift. 
+ * 
+ * To decode the Manchester signal we sample the input twice per bit. Each 
+ * sample gives us a "Chirp", and two of those are needed to decode a bit.
+ * Chirps are sampled at 1/4 of a bit period after an edge and again at 3/4 of 
+ * a bit period if the next edge is not seen yet. Pairs of chirps give us 
+ * decoded bits: 1,0 = 1 and 0,1 = 0.  
  */
 #include "pico/stdlib.h"
 #include "decoder.h"
 
-
 /**
- * @brief Decode Manchester pairs.  10 = 0 and 01 = 1
+ * @brief Decode Manchester chirp pairs.  10 = 0 and 01 = 1
  * 
  * @param upper The upper, first, chirp
  * @param lower The lower, second, chirp
@@ -44,9 +60,9 @@ int manPairToBit(bool upper, bool lower)
 }
 
 /**
- * @brief Clear any previously read bits, resets counters ready for the start of the next message
+ * @brief Clear any previously read bits, resets counters ready for the start of the next message.
  * 
- * @param dec Pointer to a decoder structure
+ * @param dec Pointer to a decoder structure.
  */
 void clearBits(struct decoder *dec)
 {
@@ -56,7 +72,7 @@ void clearBits(struct decoder *dec)
 }
 
 /**
- * @brief Added a complete message to the fifo for consumption in the main loop.
+ * @brief Add the complete message to the fifo for consumption in the main loop.
  * 
  * @param dec Pointer to a decoder structure.
  */
@@ -67,7 +83,7 @@ void ProcessBits(struct decoder *dec)
 }
 
 /**
- * @brief Set the State decoder
+ * @brief Set the State of the decoder
  * 
  * @param dec Pointer to a decoder structure.
  * @param newState The new state the decoder is transitioning too.
@@ -75,7 +91,7 @@ void ProcessBits(struct decoder *dec)
 void setState(struct decoder *dec, uint newState)
 {
     dec->state = newState;
-    dec->tickCountInState = 0;  // Count since last state change.
+    dec->ticksInState = 0;  // Count since last state change.
 }
 
 /**
@@ -108,8 +124,8 @@ bool __not_in_flash_func(on_16x_timer)(struct repeating_timer *t)
 
         case BREAK:
             if (current == 1) {
-                if ((dec->tickCountInState < (TICKS_PER_BIT * 2 - TICKS_PER_QBIT)) ||
-                    (dec->tickCountInState > (TICKS_PER_BIT * 2 + TICKS_PER_QBIT))) {
+                if ((dec->ticksInState < (TICKS_PER_BIT * 2 - TICKS_PER_QBIT)) ||
+                    (dec->ticksInState > (TICKS_PER_BIT * 2 + TICKS_PER_QBIT))) {
                     setState(dec, ERROR);
                 } else {
                     setState(dec, MAB);
@@ -118,20 +134,20 @@ bool __not_in_flash_func(on_16x_timer)(struct repeating_timer *t)
             break;
 
         case MAB:
-            if (dec->tickCountInState == TICKS_PER_3QBITS) {
+            if (dec->ticksInState == TICKS_PER_3QBITS) {
                 // Read the first half (upper chirp) of the start bit
                 // and save it for the next half
                 dec->upperChirp = current;
             }
 
             if (edgeDetected) {
-               setState(dec, dec->tickCountInState < TICKS_PER_3QBITS ? ERROR : STARTBIT);
+               setState(dec, dec->ticksInState < TICKS_PER_3QBITS ? ERROR : STARTBIT);
             }
             break;
 
         case STARTBIT:
             if (dec->ticksSinceEdge == TICKS_PER_QBIT) {
-                // This is where we would sample second half (lower chirp) of start bit, it will be zero no need to decode it.
+                // This is where we would sample second half (lower chirp) of start bit, it will be zero; no need to decode it.
                 
                 // Setup for reading the message 
                 clearBits(dec);
@@ -152,7 +168,7 @@ bool __not_in_flash_func(on_16x_timer)(struct repeating_timer *t)
                 } else {
                     dec->bitsRecieved++;
 
-                    // Add the bit to the message in the correct place pointed to by the rxMask.                    
+                    // Add the bit to the message in the correct place pointed to by the rxMask.
                     dec->message |= FullBit ? dec->rxMask : 0;
                     dec->rxMask <<= 1;
 
@@ -161,7 +177,7 @@ bool __not_in_flash_func(on_16x_timer)(struct repeating_timer *t)
             }
 
             if (dec->ticksSinceEdge == TICKS_PER_5QBITS) {
-                // Something has gone wrong, should have had and edge by now, probably end of packet.
+                // Something has gone wrong, should have had an edge by now, probably end of packet.
                 setState(dec, WAITIDLE);
             }     
             break;
@@ -174,13 +190,13 @@ bool __not_in_flash_func(on_16x_timer)(struct repeating_timer *t)
             }
 
             if (dec->ticksSinceEdge == TICKS_PER_5QBITS) {
-                // Something has gone wrong, should have had and edge by now, probably end of packet.
+                // Something has gone wrong, should have had an edge by now, probably end of packet.
                 setState(dec, WAITIDLE);
             }            
             break;
         
         case WAITIDLE:
-            if (dec->tickCountInState > TICKS_PER_BIT * 2 && current == 1) {
+            if (dec->ticksInState > TICKS_PER_BIT * 2 && current == 1) {
                 ProcessBits(dec);
                 setState(dec, IDLE);
             }
@@ -194,22 +210,22 @@ bool __not_in_flash_func(on_16x_timer)(struct repeating_timer *t)
             break;
     }
 
-    dec->tickCountInState++;
+    dec->ticksInState++;
     dec->ticksSinceEdge++;
     dec->totalTicks++;
 
-    return true; // keep repeating
+    return true; // Keep the timer repeating
 }
 
 /**
- * @brief Start the decoder timer ticking, on_16x_timer() will be called periodically.
+ * @brief Start the decoder timer ticking: on_16x_timer() will be called periodically.
  * 
  * @param dec Pointer to the decoder to start.
  * @return true if the timer could be created.
  */
 bool startDecoder(struct decoder *dec)
 {
-    // Setup timer.  Negative delay_us to period independent of the tick duration.
+    // Setup timer.  Negative delay_us to make period independent of the tick duration.
     return add_repeating_timer_us(-1000000/TICKS_PER_SEC, on_16x_timer, dec, &(dec->timer));
 }
 
@@ -228,7 +244,7 @@ bool stopDecoder(struct decoder *dec)
  * @brief Initialize the decoder.
  * 
  * @param dec Pointer to a decoder structure to be initialized.
- * @param GPIO_Pin The pin do read the input from.
+ * @param GPIO_Pin The pin to read the input from.
  */
 void initDecoder(struct decoder *dec, uint GPIO_Pin)
 {
