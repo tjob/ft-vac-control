@@ -165,7 +165,7 @@ bool __not_in_flash_func(on_16x_timer)(struct repeating_timer *t)
 
         case LOWERCHIRP:
             if (dec->ticksSinceEdge == TICKS_PER_QBIT || dec->ticksSinceEdge == TICKS_PER_3QBITS) {
-                // Can now sample the second chirp to get a full bit.
+                // Can now sample the second chirp of the current bit to get a full bit.
                 int FullBit = manPairToBit(dec->upperChirp, current);
 
                 if (FullBit == -1) {
@@ -174,7 +174,7 @@ bool __not_in_flash_func(on_16x_timer)(struct repeating_timer *t)
                 } else {
                     dec->bitsRecieved++;
 
-                    // Add the bit to the message in the correct place pointed to by the rxMask.
+                    // Add the new bit to the message in the correct place pointed to by the rxMask.
                     dec->message |= FullBit ? dec->rxMask : 0;
                     dec->rxMask <<= 1;
 
@@ -190,7 +190,7 @@ bool __not_in_flash_func(on_16x_timer)(struct repeating_timer *t)
 
         case UPPERCHIRP:
             if (dec->ticksSinceEdge == TICKS_PER_QBIT || dec->ticksSinceEdge == TICKS_PER_3QBITS) {
-                // Sample the first, upper, chirp and save it for the next half
+                // Sample the first chirp of a new bit, save it to pair up with the next lower chirp we get.
                 dec->upperChirp = current;
                 setState(dec, LOWERCHIRP);
             }
