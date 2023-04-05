@@ -1,0 +1,205 @@
+[General]
+decode_signals=1
+meta_objs=17
+views=1
+
+[1]
+color=4287582722
+conv_options=0
+conversion_type=0
+enabled=false
+name=1
+
+[2]
+color=4291559424
+conv_options=0
+conversion_type=0
+enabled=false
+name=2
+
+[3]
+color=4294277376
+conv_options=0
+conversion_type=0
+enabled=false
+name=3
+
+[4]
+color=4293776384
+conv_options=0
+conversion_type=0
+enabled=false
+name=4
+
+[5]
+color=4285780502
+conv_options=0
+conversion_type=0
+enabled=false
+name=5
+
+[6]
+color=4281623972
+conv_options=0
+conversion_type=0
+enabled=false
+name=6
+
+[7]
+color=4285878395
+conv_options=0
+conversion_type=0
+enabled=false
+name=7
+
+[D0]
+color=4279638298
+conv_options=0
+conversion_type=0
+enabled=true
+name=D0
+
+[decode_signal0]
+channel0\assigned_signal_name=D0
+channel0\initial_pin_state=2
+channel0\name=Data
+channels=1
+color=4281510450
+conv_options=0
+conversion_type=0
+decoder0\ann_class0\visible=true
+decoder0\ann_class1\visible=true
+decoder0\ann_class2\visible=true
+decoder0\id=timing
+decoder0\option0\name=avg_period
+decoder0\option0\type=x
+decoder0\option0\value=@ByteArray(\0\0\0\0\0\0\0\0)
+decoder0\option1\name=delta
+decoder0\option1\type=s
+decoder0\option1\value=@ByteArray(no\0)
+decoder0\options=2
+decoder0\row0\visible=true
+decoder0\row1\visible=true
+decoder0\row2\visible=true
+decoder0\visible=true
+decoders=1
+enabled=true
+name=Timing
+
+[meta_obj0]
+assoc_view=0
+text=C
+time=22 serialization::archive 16 0 0 0 0 2 10364518 6494780 67764568 74777725 40327517 0 0 0 6
+type=time_marker
+
+[meta_obj1]
+assoc_view=0
+text=D
+time=22 serialization::archive 16 0 0 0 0 2 10469999 99999997 93232063 89381084 59115027 0 0 0 6
+type=time_marker
+
+[meta_obj10]
+assoc_view=0
+text=M
+time=22 serialization::archive 16 0 0 0 0 2 11379891 84161176 32448425 82543103 75954612 0 0 0 6
+type=time_marker
+
+[meta_obj11]
+assoc_view=0
+text=N
+time=22 serialization::archive 16 0 0 0 0 2 11482287 87233319 82600552 86965553 2303748 0 0 0 6
+type=time_marker
+
+[meta_obj12]
+assoc_view=0
+text=O
+time=22 serialization::archive 16 0 0 0 0 2 11579996 14212920 96561130 86879258 84441937 0 0 0 6
+type=time_marker
+
+[meta_obj13]
+assoc_view=0
+text=P
+time=22 serialization::archive 16 0 0 0 0 2 11685626 70407084 36399931 71336755 4010169 0 0 0 6
+type=time_marker
+
+[meta_obj14]
+assoc_view=0
+text=Q
+time=22 serialization::archive 16 0 0 0 0 2 11788616 50196393 67612658 27612987 77768386 0 0 0 6
+type=time_marker
+
+[meta_obj15]
+assoc_view=0
+text=R
+time=22 serialization::archive 16 0 0 0 0 2 11886324 77175994 81573236 27526693 59906575 0 0 0 6
+type=time_marker
+
+[meta_obj16]
+assoc_view=0
+text=S
+time=22 serialization::archive 16 0 0 0 0 2 11981392 27750741 88642463 46856816 67178867 0 0 0 6
+type=time_marker
+
+[meta_obj2]
+assoc_view=0
+text=E
+time=22 serialization::archive 16 0 0 0 0 2 10570000 1 27187149 70105793 32709311 0 0 0 6
+type=time_marker
+
+[meta_obj3]
+assoc_view=0
+text=F
+time=22 serialization::archive 16 0 0 0 0 2 10664244 78445719 31211488 44972001 51267118 0 0 0 6
+type=time_marker
+
+[meta_obj4]
+assoc_view=0
+text=G
+time=22 serialization::archive 16 0 0 0 0 2 10760632 67222893 41726391 4593915 95972358 0 0 0 6
+type=time_marker
+
+[meta_obj5]
+assoc_view=0
+text=H
+time=22 serialization::archive 16 0 0 0 0 2 10871544 76226764 97082616 97816258 36216501 0 0 0 6
+type=time_marker
+
+[meta_obj6]
+assoc_view=0
+text=I
+time=22 serialization::archive 16 0 0 0 0 2 10975000 0 14210854 71520200 37174223 0 0 0 6
+type=time_marker
+
+[meta_obj7]
+assoc_view=0
+text=J
+time=22 serialization::archive 16 0 0 0 0 2 11076203 97602956 56062394 70076932 46299988 0 0 0 6
+type=time_marker
+
+[meta_obj8]
+assoc_view=0
+text=K
+time=22 serialization::archive 16 0 0 0 0 2 11175232 62784984 73468648 10282429 65871125 0 0 0 6
+type=time_marker
+
+[meta_obj9]
+assoc_view=0
+text=L
+time=22 serialization::archive 16 0 0 0 0 2 11276902 4371867 1235699 26266871 2196395 0 0 0 6
+type=time_marker
+
+[view0]
+1\trace_height=32
+2\trace_height=32
+3\trace_height=32
+4\trace_height=32
+5\trace_height=32
+6\trace_height=32
+7\trace_height=32
+D0\trace_height=32
+offset=22 serialization::archive 16 0 0 0 0 1 88016734 75041988 32198866 49922125 69884575 0 0 0 6
+scale=0.00089546516829830402
+segment_display_mode=3
+splitter_state=@ByteArray(\0\0\0\xff\0\0\0\x1\0\0\0\x2\0\0\0H\0\0\x3y\x1\0\0\0\x1\x1\0\0\0\x1\0)
+v_offset=-137
+zero_offset=22 serialization::archive 16 0 0 0 0 0 0 0 0 0 0 0 0 0 6
