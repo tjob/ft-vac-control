@@ -9,7 +9,7 @@
  * 
  * Uses one GPIO pin, as an input, to read the serial data line from the 
  * Festool Bluetooth receiver. Another GPIO pin, as an output, is used to turn 
- * on/off a relay controlling power to the vacuum  extractor.
+ * on/off a relay controlling power to the vacuum extractor.
  */
 #include "pico/stdlib.h"
 #include "hardware/watchdog.h"
@@ -23,10 +23,10 @@ int main() {
     const uint FTBT_PIN = 26;   ///< GPIO pin connected to the Festool CT-FI/M Bluetooth receiver module. 
     const uint SSR_PIN = 4;     ///< GPIO pin connected to the Solid State Relay
 
-    struct decoder decoder = {0};       ///< The one and only decoder
-    absolute_time_t AutoOffTime = {0};  ///< Used to track the absolute time we should automatically turn off if left on.
+    decoder_t decoder = {0};            ///< The one and only decoder
+    absolute_time_t autoOffTime = {0};  ///< Used to track the absolute time we should automatically turn off if left on.
     uint32_t ticksObserved = 0;         ///< Used to check the decoder is still ticking for the hardware watchdog.
-    uint32_t message = 0;               ///< Holds a message de-queued from the decoder's FIFO. 
+    msg_t message = {0};                ///< Holds a message de-queued from the decoder's FIFO. 
 
     stdio_init_all();
 
@@ -74,19 +74,19 @@ int main() {
         // Consume all messages from the decoder waiting in the fifo.
         while (queue_try_remove(&decoder.messageFIFO, &message)) {
             // Print the message
-            printf("0x%08lx\n", message);
+            printf("0x%08lx  %d\n", message.data, message.bitsRecieved);
 
             // Is it a start command?
-            if (message == (CMD_POWER | CMD_ON)) {
+            if (message.data == (CMD_POWER | CMD_ON)) {
                 // Turn on the output relay
                 gpio_put(SSR_PIN, true);
 
                 // Safety feature: Calculate the time we should turn off automatically if we need to.
-                AutoOffTime = make_timeout_time_ms(AUTO_OFF_AFTER);
+                autoOffTime = make_timeout_time_ms(AUTO_OFF_AFTER);
             }
 
             // Is it a stop command?
-            if (message == (CMD_POWER | CMD_OFF)) {
+            if (message.data == (CMD_POWER | CMD_OFF)) {
                 // Turn off the output relay
                 gpio_put(SSR_PIN, false);
             }
@@ -95,8 +95,8 @@ int main() {
         }
 
         // Safety feature: Automatically turn off the vacuum if it's been on too long. 
-        if (AUTO_OFF_AFTER && time_reached(AutoOffTime)) {
-            gpio_put(SSR_PIN, 0);
+        if (AUTO_OFF_AFTER && time_reached(autoOffTime)) {
+            gpio_put(SSR_PIN, false);
         }
     }
 

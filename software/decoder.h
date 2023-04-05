@@ -29,6 +29,9 @@
 #define CMD_SPEEDCTRL   0x23
 #define CMD_FULLSPEED   0xff00
 #define CMD_NOSPEED     0x0000
+#define CMD_PWR_ON_REST 0x1d
+#define CMD_UNKNOWN     0x0a
+
 
 /**
  * @brief Decoder states.
@@ -37,7 +40,7 @@
  * The current state, how long we have been in it, and level sampled of input GPIO 
  * pin determines the next state. 
  */
-enum decoderStates {
+typedef enum decoderStates {
     IDLE = 0,    ///< Idle, the line is high
     BREAK,       ///< Break, line held low for two bit periods
     MAB,         ///< Mark After Break, line is high for approximately 1 bit period after the BREAK.
@@ -46,31 +49,41 @@ enum decoderStates {
     UPPERCHIRP,  ///< The upper (first) chirp of an encoded bit pair
     WAITIDLE,    ///< Wait for the line to go idle (high) again
     ERROR        ///< Something unexpected seen in the line code, clean up and then go to WAITIDLE.
-};
+} decoderStates_t;
 
 /**
- * @brief The decoder structure
+ * @brief Message structure.
+ * 
+ * Holds the bits received along with a count.
+ */
+typedef struct {
+    uint32_t data;      ///< The message bytes combined into a 32 bit value.
+    uint bitsRecieved;  ///< Number of bits received in message.
+} msg_t;
+
+/**
+ * @brief Decoder structure.
  * 
  * Holds the state information and message bytes received so far.
  */
-struct decoder {
+typedef struct decoder {
     uint inputPin;          ///< GPIO pin used for reading the input.
-    uint state;             ///< Decoder state.
+    decoderStates_t state;  ///< Decoder state.
     bool last;              ///< Input level at start of previous tick.
-    uint32_t ticksInState;          ///< Count of ticks since last state change.
-    uint32_t ticksSinceEdge;        ///< Count of ticks since last edge in input, raising or falling.
-    struct repeating_timer timer;   ///< Timer structure used to tick the main receiver state machine function.
-    uint32_t message;       ///< The current message being received.
-    uint bitsRecieved;      ///< Number of bits received for current message.
+    uint32_t ticksInState;      ///< Count of ticks since last state change.
+    uint32_t ticksSinceEdge;    ///< Count of ticks since last edge in input, raising or falling.
+    repeating_timer_t timer;    ///< Timer structure used to tick the main receiver state machine function.
     bool upperChirp;        ///< First half of a bit (a chirp) received.
+    msg_t message;          ///< The current message being received.
     uint32_t rxMask;        ///< Bit mask with only the next bit to be received set.
     queue_t messageFIFO;    ///< fifo queue used to store received messages until the main loop can consume them.
     uint32_t decodeErrors;  ///< A count of how many times this decoder enters the error state.
     uint32_t totalTicks;    ///< A count of how many times this decoder has ticked.
-};
+} decoder_t;
 
-void initDecoder(struct decoder *dec, uint GPIO_Pin);
-bool stopDecoder(struct decoder *dec);
-bool startDecoder(struct decoder *dec);
+
+void initDecoder(decoder_t *dec, uint GPIO_Pin);
+bool stopDecoder(decoder_t *dec);
+bool startDecoder(decoder_t *dec);
 
 #endif

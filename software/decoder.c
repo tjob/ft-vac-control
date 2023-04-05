@@ -70,11 +70,11 @@ int manPairToBit(bool upper, bool lower)
  * 
  * @param dec Pointer to a decoder structure.
  */
-void clearBits(struct decoder *dec)
+void clearBits(decoder_t *dec)
 {
-    dec->message=0;
+    dec->message.data=0;
     dec->rxMask = 1;
-    dec->bitsRecieved = 0;
+    dec->message.bitsRecieved = 0;
 }
 
 /**
@@ -82,7 +82,7 @@ void clearBits(struct decoder *dec)
  * 
  * @param dec Pointer to a decoder structure.
  */
-void ProcessBits(struct decoder *dec)
+void ProcessBits(decoder_t *dec)
 {
     queue_try_add(&dec->messageFIFO, &dec->message);
     clearBits(dec);
@@ -94,7 +94,7 @@ void ProcessBits(struct decoder *dec)
  * @param dec Pointer to a decoder structure.
  * @param newState The new state the decoder is transitioning too.
  */
-void setState(struct decoder *dec, uint newState)
+void setState(decoder_t *dec, uint newState)
 {
     dec->state = newState;
     dec->ticksInState = 0;  // Count since last state change.
@@ -103,14 +103,14 @@ void setState(struct decoder *dec, uint newState)
 /**
  * @brief Runs on a timer at 16x the speed of bit (1 ms), so every 62.5 us (i.e. at 16 kHz)
  * 
- * @param t Pointer to a repeating timer structure.
+ * @param rt Pointer to a repeating timer structure.
  * @return Always returns true so the timer continues to tick. 
  * 
  * This is the main decoding state machine.
  */
-bool __not_in_flash_func(on_16x_timer)(struct repeating_timer *t)
+bool __not_in_flash_func(on_16x_timer)(repeating_timer_t *rt)
 {
-    struct decoder *dec = (struct decoder*)t->user_data;
+    decoder_t *dec = (decoder_t*)rt->user_data;
     const bool current = gpio_get(dec->inputPin);
     bool edgeDetected = false;
 
@@ -172,10 +172,10 @@ bool __not_in_flash_func(on_16x_timer)(struct repeating_timer *t)
                     // Invalid half bit pair
                     setState(dec, ERROR);
                 } else {
-                    dec->bitsRecieved++;
+                    dec->message.bitsRecieved++;
 
                     // Add the new bit to the message in the correct place pointed to by the rxMask.
-                    dec->message |= FullBit ? dec->rxMask : 0;
+                    dec->message.data |= FullBit ? dec->rxMask : 0;
                     dec->rxMask <<= 1;
 
                     setState(dec, UPPERCHIRP);
@@ -229,7 +229,7 @@ bool __not_in_flash_func(on_16x_timer)(struct repeating_timer *t)
  * @param dec Pointer to the decoder to start.
  * @return true if the timer could be created.
  */
-bool startDecoder(struct decoder *dec)
+bool startDecoder(decoder_t *dec)
 {
     // Setup timer.  Negative delay_us to make period independent of the tick duration.
     return add_repeating_timer_us(-1000000/TICKS_PER_SEC, on_16x_timer, dec, &(dec->timer));
@@ -241,7 +241,7 @@ bool startDecoder(struct decoder *dec)
  * @param dec Pointer to the decoder to stop.
  * @return true if the decoder timer was stopped.
  */
-bool stopDecoder(struct decoder *dec)
+bool stopDecoder(decoder_t *dec)
 {
     return cancel_repeating_timer(&(dec->timer));
 }
@@ -252,9 +252,9 @@ bool stopDecoder(struct decoder *dec)
  * @param dec Pointer to a decoder structure to be initialized.
  * @param GPIO_Pin The pin to read the input from.
  */
-void initDecoder(struct decoder *dec, uint GPIO_Pin)
+void initDecoder(decoder_t *dec, uint GPIO_Pin)
 {
     dec->inputPin = GPIO_Pin;
     clearBits(dec);
-    queue_init(&dec->messageFIFO, sizeof(uint32_t), 16);
+    queue_init(&dec->messageFIFO, sizeof(msg_t), 16);
 }
