@@ -1,0 +1,6 @@
+(fp_lib_table
+  (lib (name "MCU_RaspberryPi_and_Boards")(type "KiCad")(uri "${KIPRJMOD}/RP-Pico Libraries/MCU_RaspberryPi_and_Boards.pretty")(options "")(descr ""))
+  (lib (name "VTX-214-005-0xx")(type "KiCad")(uri "${KIPRJMOD}/VTX-214-005-0xx.pretty")(options "")(descr ""))
+  (lib (name "wago-2604-11xx")(type "KiCad")(uri "${KIPRJMOD}/wago-2604-1103.pretty")(options "")(descr ""))
+  (lib (name "festool BT module")(type "KiCad")(uri "${KIPRJMOD}/festool BT module.pretty")(options "")(descr ""))
+)

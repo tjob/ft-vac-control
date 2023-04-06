@@ -1,0 +1,5 @@
+(sym_lib_table
+  (lib (name "MCU_RaspberryPi_and_Boards")(type "KiCad")(uri "${KIPRJMOD}/RP-Pico Libraries/MCU_RaspberryPi_and_Boards.kicad_sym")(options "")(descr ""))
+  (lib (name "VTX-214-005-005")(type "KiCad")(uri "${KIPRJMOD}/VTX-214-005-005.kicad_sym")(options "")(descr ""))
+  (lib (name "wago-2604-11xx")(type "KiCad")(uri "${KIPRJMOD}/wago-2604-1103.kicad_sym")(options "")(descr ""))
+)
