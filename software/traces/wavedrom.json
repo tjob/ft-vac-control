@@ -1,0 +1,6 @@
+{ signal: [
+    { name: "Serial Data", wave: "h..l...h.L.HlHlH.L.H.LhLhLh|", node: '...I...J', phase:-0.15 },
+    { name: "Annotations", wave: "3..4...52.6.6.6.6.6.6.6.6.6|", data: ["Idle", "Break", "MAB", "StartBit", "D0", "D1", "D2", "D3", "D4", "D5", "D6", "D7"]},
+    { name: "Manchester decoded", wave: "x.......2.2.2.2.2.2.2.2.2.2|", data: ["0", "1", "1", "1", "0", "1", "0", "0", "0"]},
+    { name: "Payload", wave: "x.......x.2...............x|", data: ["0x17"]}
+  ]}
