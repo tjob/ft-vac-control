@@ -1,7 +1,7 @@
 /**
  * @file decoder.h
  * @author tjob
- * @brief Decoder for Festool 202097 CT-FI/M-Set
+ * @brief Decoder serial stream coming from Festool No. 202097 CT-F I/M
  * @version 0.1
  * @date 2023-04-02
  * 

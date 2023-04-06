@@ -1,13 +1,13 @@
 /**
  * @file decoder.c
  * @author tjob
- * @brief Decoder for Festool 202097 CT-FI/M-Set
+ * @brief Decoder serial stream coming from Festool No. 202097 CT-F I/M
  * @version 0.1
  * @date 2023-04-02
  * 
  * @copyright Copyright (c) 2023
  * 
- * The Festool 202097 CT-F I Bluetooth add-on for CT26/36/48 vacuum extractors 
+ * The Festool 202097 CT-F I/M Bluetooth add-on for CT26/36/48 vacuum extractors 
  * has 3 electrical connections to the host vacuum; GND, +5V, and Data. The 
  * data line is used for serial communication and runs at approximately 1 kHz. 
  * The Bluetooth receiver encodes bits onto the data line using a form of 

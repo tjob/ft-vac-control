@@ -1,7 +1,7 @@
 /**
  * @file main.c
  * @author tjob
- * @brief Use a Raspberry Pi Pico and a "Festool 202097 CT-FI/M-Set" to control any vacuum extractor.
+ * @brief Use a Raspberry Pi Pico and a "Festool 202097 CT-F I/M" to control any vacuum extractor.
  * @version 0.1
  * @date 2023-04-02
  * 
@@ -20,7 +20,7 @@
 int main() {
     const uint32_t AUTO_OFF_AFTER = 60*60*1000; ///< Automatically turn off the vacuum if left on for more than 1 Hour.
     const uint LED_PIN_MAKS = 1 << PICO_DEFAULT_LED_PIN;
-    const uint FTBT_PIN = 26;   ///< GPIO pin connected to the Festool CT-FI/M Bluetooth receiver module. 
+    const uint FTBT_PIN = 26;   ///< GPIO pin connected to the Festool CT-F I/M Bluetooth receiver module. 
     const uint SSR_PIN = 4;     ///< GPIO pin connected to the Solid State Relay
 
     decoder_t decoder = {0};            ///< The one and only decoder
