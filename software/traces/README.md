@@ -1,13 +1,13 @@
 # Serial signal traces
 
-These traces (.sr files) capture the output signal of the Festool CT-F I Bluetooth module when not connected to a CT vacuum extractor.  They can be viewed using [Pulseview](https://sigrok.org/wiki/PulseView) from the sigrok project.
+These traces (.sr files) capture the output signal of the Festool CT-F I/M Bluetooth module when not connected to a CT vacuum extractor.  They can be viewed using [Pulseview](https://sigrok.org/wiki/PulseView) from the sigrok project.
 
 
 ## Power on reset [(Startup.sr)](Startup.sr)
 Approximately 590 ms after power on, the Bluetooth module sends a single 1 byte message of `0x1d` to the extractor.  It's function is unknown.
 
 ## Manual remote on [(On.sr)](On.sr)
-When the Bluetooth module receives the first (and all other odd numbered) press of the manual remote button the module sends 3 separate messages to the extractor. Each is two bytes long.
+When the Bluetooth module receives the first (and all other odd numbered) press of the manual remote (CT-F I) button the module sends 3 separate messages to the extractor. Each is two bytes long.
 
 ```
 Message 1:
@@ -26,7 +26,7 @@ Assumptions: The first and last message is the ON command, not clear why it's re
 
 ## Manual remote off [(Off.sr)](Off.sr)
 
-For the second press of the manual remote, and all subsequent even numbered presses, the Bluetooth module send 4 separate messages to the extractor.
+For the second press of the manual (CT-F I) remote, and all subsequent even numbered presses, the Bluetooth module send 4 separate messages to the extractor.
 
 ```
 Message 1:
