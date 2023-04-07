@@ -16,7 +16,6 @@ But I don't have a CT26/36/48 extractor from Festool, so I wanted to create an a
 
 
 ## Features
-
  - Allow connecting any vacuum extractor that has a physical switch capable of being always on.  A vacuum with an NVR will not work. 
  - Works with an unmodified Festool No. 202097 receiver. It's Plug and Play. At a later date if I ever get a CT extractor I wanted to be able to use this module again.
  - Had software safety features; Automatically turns off if left on for an extended period.  Uses the RP2040's hardware watchdog to shut off the power if the software stops for any reason.
@@ -24,12 +23,18 @@ But I don't have a CT26/36/48 extractor from Festool, so I wanted to create an a
 
 
 ## How it works
-
 The Festool module has three electrical connections to the host vacuum, two for power and one is data. The data line is serial, probably bidirectional, and uses a form of Manchester encoding.  For more details on the serial stream and commands within see the [description of the traces](./software/traces/) captured with a logic analyzer.
 
 ![Decoded serial steam](./software/traces/wavedrom.svg)
 
 The serial data from the receiver feeds the Raspberry Pi Pico via a BSS138 MOSFET as a level shifter.  The Pico decodes the Manchester encoded stream. When the Start/Stop commands are seen the software switches a Solid State Relay controlling mains AC supply to the output socket.
+
+Wanting an excuse to learn KiCad, I designed a custom PCB to host the Pi Pico and a 4 pin 3.96 mm header to plug the CT-F I/M bluetooth module into.  The board contains a 240V switch mode regulator providing 5V DC power to both the Pico and the CT-F I/M.
+
+![Circuit schematics diagram](./images/Schematic.png)
+
+## License
+The software, schematic designs and PCB layout contained in this repository are released under the MIT license.
 
 ## Credits
 I got the pinout for the Bluetooth receiver from YouTube channel "My Project Box". His video ["Festool Bluetooth Hack / Mod works with any dust extractor!"](https://www.youtube.com/watch?v=EyrakKOR5tI) shows a very neat solution with a different approach; avoiding any software.
