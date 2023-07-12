@@ -2,6 +2,8 @@
 
 Use the Festool Bluetooth remote with vacuum extractors from other manufactures.
 
+[![Video Demo](./images/Screenshot%202023-07-12%20at%2022.15.19.png)](https://youtu.be/SCtY6I_2gwY)
+
 The project contains the Schematics and PCB layout designed using [KiCad 7](https://www.kicad.org/), and the firmware (written in C) for the [Raspberry Pi Pico](https://www.raspberrypi.com/products/raspberry-pi-pico/) to interface with a [Festool No. 202097 Bluetooth Remote Control add-on](https://www.amazon.co.uk/Festool-202097-Remote-Control-Blue/dp/B0794ZWFLR)
 
 ![Assembled project](./images/Assembled.jpg)
