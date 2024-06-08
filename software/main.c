@@ -18,8 +18,7 @@
 #include "decoder.h"
 
 int main() {
-    const uint32_t AUTO_OFF_AFTER = 60*60*1000; ///< Automatically turn off the vacuum if left on for more than 1 Hour.
-    const uint LED_PIN_MAKS = 1 << PICO_DEFAULT_LED_PIN;
+    const uint32_t AUTO_OFF_AFTER = 20*60*1000; ///< Automatically turn off the vacuum if left on for more than 20 minutes.
     const uint FTBT_PIN = 26;   ///< GPIO pin connected to the Festool CT-F I/M Bluetooth receiver module. 
     const uint SSR_PIN = 4;     ///< GPIO pin connected to the Solid State Relay
 
@@ -56,12 +55,11 @@ int main() {
 
     // Main loop.  Never ends, only way out is power down or watchdog reset.
     while (true) {
-        // Toggle the onboard LED
-        gpio_xor_mask(LED_PIN_MAKS);
+        // Blink the onboard led as a sign of life.
+        gpio_put(PICO_DEFAULT_LED_PIN, time_us_32() & (1 << 19));
 
-        // Delay long enough to see the LED blink, short enough not to add too much latency
-        // retrieving messages from the decoder. 
-        sleep_ms(150);
+        // Delay long enough for the Decoder's timer to have ran at least once
+        sleep_ms(10);
 
         // Only service the watchdog if both the decoder timer and this main loop
         // are running.  If either stops, for any reason, watchdog will reset the 
@@ -78,7 +76,7 @@ int main() {
 
             // Is it a start command?
             if (message.data == (CMD_POWER | CMD_ON)) {
-                // Turn on the output relay
+                // Turn on the relay output
                 gpio_put(SSR_PIN, true);
 
                 // Safety feature: Calculate the time we should turn off automatically if we need to.
@@ -87,7 +85,7 @@ int main() {
 
             // Is it a stop command?
             if (message.data == (CMD_POWER | CMD_OFF)) {
-                // Turn off the output relay
+                // Turn off the relay output
                 gpio_put(SSR_PIN, false);
             }
 
@@ -103,5 +101,6 @@ int main() {
     // Should never get here! Halt.
     stopDecoder(&decoder);
     while (true) {}
+    
     return 0;
 }
