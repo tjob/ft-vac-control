@@ -82,7 +82,7 @@ void clearBits(decoder_t *dec)
  * 
  * @param dec Pointer to a decoder structure.
  */
-void ProcessBits(decoder_t *dec)
+void processBits(decoder_t *dec)
 {
     queue_try_add(&dec->messageFIFO, &dec->message);
     clearBits(dec);
@@ -122,12 +122,17 @@ bool __not_in_flash_func(on_16x_timer)(repeating_timer_t *rt)
     }
 
     switch (dec->state) {
+        // The serial line idles high between messages.
+        // In this state we are waiting for the line to fall, signaling the 
+        // start of the "break" before the message content.
         case IDLE:
             if (current == 0) {
                 setState(dec, BREAK);
             }
             break;
 
+        // In the break state, the serial line is driven low for 2 ms. i.e
+        // the length of 2 bits.
         case BREAK:
             if (current == 1) {
                 if ((dec->ticksInState < (TICKS_PER_BIT * 2 - TICKS_PER_QBIT)) ||
@@ -139,6 +144,8 @@ bool __not_in_flash_func(on_16x_timer)(repeating_timer_t *rt)
             }
             break;
 
+        // The Mark After Break (MAB), the line is drive high before 
+        // transmission of the start bit.
         case MAB:
             if (dec->ticksInState == TICKS_PER_3QBITS) {
                 // Read the first half (upper chirp) of the start bit
@@ -151,6 +158,7 @@ bool __not_in_flash_func(on_16x_timer)(repeating_timer_t *rt)
             }
             break;
 
+        // Receive the start bit, it's always 0.
         case STARTBIT:
             if (dec->ticksSinceEdge == TICKS_PER_QBIT) {
                 // This is where we would sample second half (lower chirp) of start bit, it will be zero; no need to decode it.
@@ -163,6 +171,12 @@ bool __not_in_flash_func(on_16x_timer)(repeating_timer_t *rt)
             } 
             break;
 
+        // Bits are sent in two parts, chirps, this state reads the second 
+        // chirp of a bit. As the lower chirp comes after the upper chirp, at 
+        // the end of this state we have a new bit.
+        // 
+        // When receiving the message content the state machine toggles back
+        // and forth between the LOWERCHIRP and UPPERCHIRP states.
         case LOWERCHIRP:
             if (dec->ticksSinceEdge == TICKS_PER_QBIT || dec->ticksSinceEdge == TICKS_PER_3QBITS) {
                 // Can now sample the second chirp of the current bit to get a full bit.
@@ -188,6 +202,7 @@ bool __not_in_flash_func(on_16x_timer)(repeating_timer_t *rt)
             }     
             break;
 
+        // Receive the upper chirp, the first half of a bit sent on the line.
         case UPPERCHIRP:
             if (dec->ticksSinceEdge == TICKS_PER_QBIT || dec->ticksSinceEdge == TICKS_PER_3QBITS) {
                 // Sample the first chirp of a new bit, save it to pair up with the next lower chirp we get.
@@ -201,13 +216,16 @@ bool __not_in_flash_func(on_16x_timer)(repeating_timer_t *rt)
             }            
             break;
         
+        // In this state we wait for the serial line to go back to the idle 
+        // state.
         case WAITIDLE:
             if (dec->ticksInState > TICKS_PER_BIT * 2 && current == 1) {
-                ProcessBits(dec);
+                processBits(dec);
                 setState(dec, IDLE);
             }
             break;
 
+        // For completeness, an error state.  Should land here unless there was a decode error.
         case ERROR:
         default:
             dec->decodeErrors++;
