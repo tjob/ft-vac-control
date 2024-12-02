@@ -37,8 +37,8 @@ Wanting an excuse to learn KiCad, I designed a custom PCB to host the Pi Pico an
 
 ## :zap: Mains voltage electricity can kill! :zap: 
 
-[!WARNING] 
-This project description is not a guide and does not detail how to assemble a unit safely.  If you are not sure how to build one that is safe and complies with local laws and regulations, DO NOT ATTEMPT TO RECREATE.
+> [!WARNING] 
+> This project description is not a guide and does not detail how to assemble a unit safely.  If you are not sure how to build one that is safe and complies with local laws and regulations, DO NOT ATTEMPT TO RECREATE.
 
 ## Bill of Materials
 
