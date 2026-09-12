@@ -24,12 +24,13 @@ int main() {
 
     decoder_t decoder = {0};            ///< The one and only decoder
     absolute_time_t autoOffTime = {0};  ///< Used to track the absolute time we should automatically turn off if left on.
+    bool vacuumOn = false;              ///< Tracks whether the vacuum relay is currently on.
     uint32_t ticksObserved = 0;         ///< Used to check the decoder is still ticking for the hardware watchdog.
     msg_t message = {0};                ///< Holds a message de-queued from the decoder's FIFO. 
 
     stdio_init_all();
 
-    if (watchdog_caused_reboot()) {
+    if (watchdog_enable_caused_reboot()) {
         printf("Rebooted by watchdog!\n");
     }
 
@@ -72,12 +73,13 @@ int main() {
         // Consume all messages from the decoder waiting in the fifo.
         while (queue_try_remove(&decoder.messageFIFO, &message)) {
             // Print the message
-            printf("0x%08lx  %d\n", message.data, message.bitsRecieved);
+            printf("0x%08lx  %d\n", message.data, message.bitsReceived);
 
             // Is it a start command?
             if (message.data == (CMD_POWER | CMD_ON)) {
                 // Turn on the relay output
                 gpio_put(SSR_PIN, true);
+                vacuumOn = true;
 
                 // Safety feature: Calculate the time we should turn off automatically if we need to.
                 autoOffTime = make_timeout_time_ms(AUTO_OFF_AFTER);
@@ -87,14 +89,16 @@ int main() {
             if (message.data == (CMD_POWER | CMD_OFF)) {
                 // Turn off the relay output
                 gpio_put(SSR_PIN, false);
+                vacuumOn = false;
             }
 
             // All other commands are ignored for now.
         }
 
         // Safety feature: Automatically turn off the vacuum if it's been on too long. 
-        if (AUTO_OFF_AFTER && time_reached(autoOffTime)) {
+        if (AUTO_OFF_AFTER && vacuumOn && time_reached(autoOffTime)) {
             gpio_put(SSR_PIN, false);
+            vacuumOn = false;
         }
     }
 
